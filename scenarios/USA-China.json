@@ -1,0 +1,68 @@
+{
+  "name": "USA + China",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "data": {
+    "display": "USD",
+    "horizon": 20,
+    "startCash": 150000,
+    "includeOps": false,
+    "cashYield": 4,
+    "assets": [
+      {
+        "id": "home_usa",
+        "name": "US Home",
+        "status": "current",
+        "currency": "USD",
+        "price": 420000,
+        "loan": 300000,
+        "termMonths": 324,
+        "rate": 6.125,
+        "equity": 120000,
+        "rent": 0,
+        "maintenance": 4200,
+        "tax": 6500,
+        "insurance": 1900,
+        "fx": 1,
+        "fxGrowth": 0,
+        "assume": {
+          "maintGrowth": 2,
+          "taxGrowth": 2,
+          "insGrowth": 2,
+          "rentStepPct": 3,
+          "rentStepYears": 3,
+          "apprStepPct": 3,
+          "apprStepYears": 2,
+          "sellCostPct": 6
+        }
+      },
+      {
+        "id": "flat_china",
+        "name": "Shanghai Apartment",
+        "status": "potential",
+        "currency": "CNY",
+        "price": 3500000,
+        "loan": 3000000,
+        "termMonths": 300,
+        "rate": 4.2,
+        "equity": 500000,
+        "rent": 120000,
+        "maintenance": 24000,
+        "tax": 8000,
+        "insurance": 6000,
+        "fx": 7.1,
+        "fxGrowth": -1,
+        "assume": {
+          "maintGrowth": 4,
+          "taxGrowth": 3,
+          "insGrowth": 3,
+          "rentStepPct": 5,
+          "rentStepYears": 2,
+          "apprStepPct": 5,
+          "apprStepYears": 1,
+          "sellCostPct": 2
+        },
+        "plan": { "action": "buy", "year": 4, "down": 500000 }
+      }
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "name": "USA + India",
+  "savedAt": "2026-10-11T00:00:00.000Z",
+  "data": {
+    "display": "USD",
+    "horizon": 20,
+    "startCash": 120000,
+    "includeOps": false,
+    "cashYield": 4,
+    "assets": [
+      {
+        "id": "home_usa",
+        "name": "US Home",
+        "status": "current",
+        "currency": "USD",
+        "price": 395000,
+        "loan": 295000,
+        "termMonths": 312,
+        "rate": 5.875,
+        "equity": 100000,
+        "rent": 0,
+        "maintenance": 4000,
+        "tax": 6000,
+        "insurance": 1800,
+        "fx": 1,
+        "fxGrowth": 0,
+        "assume": {
+          "maintGrowth": 2,
+          "taxGrowth": 2,
+          "insGrowth": 2,
+          "rentStepPct": 3,
+          "rentStepYears": 3,
+          "apprStepPct": 3,
+          "apprStepYears": 2,
+          "sellCostPct": 6
+        }
+      },
+      {
+        "id": "flat_india",
+        "name": "Bengaluru Flat",
+        "status": "potential",
+        "currency": "INR",
+        "price": 20000000,
+        "loan": 16000000,
+        "termMonths": 240,
+        "rate": 8.75,
+        "equity": 4000000,
+        "rent": 720000,
+        "maintenance": 60000,
+        "tax": 20000,
+        "insurance": 15000,
+        "fx": 88,
+        "fxGrowth": -3,
+        "assume": {
+          "maintGrowth": 5,
+          "taxGrowth": 4,
+          "insGrowth": 4,
+          "rentStepPct": 7,
+          "rentStepYears": 2,
+          "apprStepPct": 7,
+          "apprStepYears": 1,
+          "sellCostPct": 2
+        },
+        "plan": { "action": "buy", "year": 3, "down": 4000000 }
+      }
+    ]
+  }
+}

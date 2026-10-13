@@ -1,0 +1,8 @@
+.DS_Store
+
+# Scenarios saved locally by server.js are personal; don't commit them.
+# The bundled examples (and their manifest) are the exception.
+scenarios/*
+!scenarios/index.json
+!scenarios/USA-India.json
+!scenarios/USA-China.json

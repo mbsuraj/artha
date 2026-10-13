@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investment Scenario Planner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#f7f7f5; --card:#fff; --text:#1d1d1b; --muted:#6b6b66; --border:#e2e2dc; --accent:#2a6fdb;
+    --c-principal:#2a6fdb; --c-interest:#d9534f; --c-maint:#e8a33d;
+    --c-tax:#7b61c9; --c-ins:#3aa38a; --c-rent:#1d1d1b; --c-value:#2a6fdb; --c-equity:#3aa38a; --c-loan:#d9534f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161616; --card:#212121; --text:#ececea; --muted:#a0a09a; --border:#3a3a38;
+      --accent:#6aa3ff; --c-principal:#6aa3ff; --c-interest:#f0807b; --c-maint:#f0be63;
+      --c-tax:#a692e6; --c-ins:#5cc4aa; --c-rent:#ececea; --c-value:#6aa3ff; --c-equity:#5cc4aa; --c-loan:#f0807b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; } h2 { font-size:16px; margin:0 0 12px; }
+  .sub { color:var(--muted); margin-bottom:12px; font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .card.inner { background:var(--bg); }
+  .grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:2px; }
+  input, select { width:100%; padding:7px 8px; border:1px solid var(--border); border-radius:6px;
+    background:var(--bg); color:var(--text); font:inherit; }
+  .card.inner input, .card.inner select { background:var(--card); }
+  button { padding:7px 12px; border:1px solid var(--border); border-radius:6px; background:var(--card);
+    color:var(--text); cursor:pointer; font:inherit; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .asset-head { display:flex; gap:8px; align-items:end; margin-bottom:10px; }
+  .asset-head > div { flex:1; }
+  .tiles { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); }
+  .tile { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+  .tile b { display:block; font-size:19px; } .tile span { font-size:12px; color:var(--muted); }
+  .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+  .controls input, .controls select { width:auto; }
+  .chart-wrap { position:relative; height:340px; min-width:0; }
+  .cmp-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+  .cmpB { display:none; }
+  #pagePlanner.compare .cmp-grid { grid-template-columns:1fr 1fr; }
+  #pagePlanner.compare .cmpB { display:block; }
+  @media (max-width:900px) { #pagePlanner.compare .cmp-grid { grid-template-columns:1fr; } }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th,td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+  th:first-child,td:first-child { text-align:left; }
+  th.ev,td.ev { text-align:left; white-space:normal; min-width:170px; }
+  .tbl { overflow-x:auto; max-height:420px; overflow-y:auto; }
+  ul.assume { margin:0; padding-left:18px; color:var(--muted); font-size:13px; } ul.assume li { margin:3px 0; }
+
+  summary { cursor:pointer; font-weight:600; }
+  .cdesc { margin:-6px 0 10px; }
+  .tabs { display:flex; gap:6px; margin-bottom:16px; }
+  .tab { padding:9px 16px; border-radius:8px; }
+  .tab.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  /* timeline */
+  .tl-row { display:grid; grid-template-columns:230px 1fr 84px; gap:10px; align-items:center; margin-bottom:8px; }
+  .tl-label { font-size:13px; line-height:1.3; }
+  .tl-ruler { display:grid; font-size:11px; color:var(--muted); text-align:center; }
+  .tl-track { position:relative; display:grid; height:36px; background:var(--bg); border:1px solid var(--border); border-radius:6px; }
+  .cell { cursor:pointer; border-left:1px solid var(--border); }
+  .cell:first-child { border-left:0; }
+  .cell:hover { background:rgba(42,111,219,.18); }
+  .bar { position:absolute; top:7px; bottom:7px; border-radius:4px; pointer-events:none; opacity:.85; }
+  .bar.current { background:var(--c-principal); }
+  .bar.potential { background:repeating-linear-gradient(45deg,var(--c-ins),var(--c-ins) 6px,transparent 6px,transparent 10px); border:1px solid var(--c-ins); }
+  .mk { position:absolute; top:-1px; bottom:-1px; width:2px; pointer-events:none; font-size:10px; font-weight:700; padding-left:4px; line-height:14px; }
+  .mk.buy { background:var(--c-ins); color:var(--c-ins); } .mk.sell { background:var(--c-interest); color:var(--c-interest); }
+  .hint { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--muted); pointer-events:none; }
+  .tl-actions { display:flex; gap:4px; justify-content:flex-end; } .tl-actions button { padding:4px 8px; font-size:12px; }
+  .badge { font-size:10px; text-transform:uppercase; padding:1px 6px; border-radius:10px; border:1px solid var(--border); color:var(--muted); }
+  .badge.potential { color:var(--c-ins); border-color:var(--c-ins); } .badge.current { color:var(--c-principal); border-color:var(--c-principal); }
+  #menu { display:none; position:fixed; z-index:20; background:var(--card); border:1px solid var(--border); border-radius:8px;
+    box-shadow:0 6px 24px rgba(0,0,0,.25); padding:6px; min-width:260px; }
+  #menu .mh { font-size:12px; color:var(--muted); padding:4px 8px; }
+  #menu .mrow { font-size:12px; padding:4px 8px; }
+  #menu input { width:100%; }
+  #menu button:disabled { opacity:.45; cursor:not-allowed; }
+  #menu button:disabled:hover { background:transparent; color:inherit; }
+  #menu button { display:block; width:100%; text-align:left; border:0; margin:2px 0; }
+  #menu button:hover { background:var(--accent); color:#fff; }
+  @media (max-width:760px) { .tl-row { grid-template-columns:1fr; } .tl-actions { justify-content:flex-start; } }
+</style>
+</head>
+<body>
+<main id="appMain">
+  <h1>Investment Scenario Planner</h1>
+  <div class="sub">Plan what you buy and sell, and see what happens to your money. <a href="https://github.com/mbsuraj/artha#readme" target="_blank" rel="noopener">How it works &amp; source code &#8599;</a></div>
+
+  <div class="card">
+    <h2>Scenarios</h2>
+    <div class="controls">
+      <input id="scName" placeholder="Scenario name" style="width:200px">
+      <button class="primary" id="scSave">Save current</button>
+      <select id="scList"></select>
+      <button id="scLoad">Load</button>
+      <button id="scDelete">Delete</button>
+      <button id="scExport">Export file</button>
+      <button id="scImport">Import file…</button>
+      <input id="scFile" type="file" accept=".json,application/json" style="display:none">
+    </div>
+    <div class="sub" id="scStatus" style="margin:0"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab" id="tabAssets" data-page="assets">1. Assets</button>
+    <button class="tab" id="tabPlanner" data-page="planner">2. Scenario planner</button>
+  </div>
+
+  <!-- Page 1 -->
+  <div id="pageAssets">
+    <div class="card">
+      <h2>Cash</h2>
+      <div class="controls" style="margin-bottom:4px">
+        <label style="margin:0">Interest on unused cash (% a year)</label>
+        <input id="cashYield" type="number" step="any" min="0" value="4" style="width:90px">
+      </div>
+      <div class="sub" style="margin:0">Paid on your dollar cash balance.</div>
+    </div>
+
+    <div class="card">
+      <h2>Your assets</h2>
+      <div class="sub"><b>Current</b> = you own it. <b>Potential</b> = you might buy it.</div>
+      <div id="assets"></div>
+      <button class="primary" id="addAsset">+ Add asset</button>
+      <button data-page="planner" style="float:right">Next: plan →</button>
+    </div>
+  </div>
+
+  <!-- Page 2 -->
+  <div id="pagePlanner" style="display:none">
+    <div id="plannerBody">
+      <div class="card">
+        <div class="controls">
+          <h2 style="margin:0">Plan</h2>
+          <label style="margin:0">Timeline</label><select id="horizon"></select>
+          <label style="margin:0">Starting cash <span id="startCashCur"></span></label><input id="startCash" type="number" step="any" style="width:130px">
+          <label id="opsWrap" style="margin:0;display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="includeOps" style="width:auto"> Count rent &amp; costs in cash</label>
+          <span id="dispWrap"><label style="margin:0;display:inline;font-weight:600;color:var(--text)">Show charts in</label> <select id="dispCur"></select></span>
+          <button id="cmpBtn">Compare plans</button>
+          <button id="useBBtn" style="display:none">Use Plan B as default →</button>
+        </div>
+        <div class="sub" id="curNote"></div>
+        <div class="sub" id="clickHint">Click a year to buy, sell or do nothing.</div>
+        <div class="cmp-grid">
+          <div><div class="sub" id="planALabel" style="display:none;font-weight:600;margin-bottom:6px">Plan A (current default)</div><div id="timeline"></div></div>
+          <div class="cmpB"><div class="sub" style="font-weight:600;margin-bottom:6px">Plan B (what-if)</div><div id="timelineB"></div></div>
+        </div>
+      </div>
+
+            <div class="card">
+        <h2 id="wealthTitle">Total Cash + Equity Plots</h2>
+        <div class="sub cdesc" id="wealthDesc">Your cash plus the part of your property you own after loans.</div>
+        <div class="cmp-grid"><div class="chart-wrap"><canvas id="wealthChart"></canvas></div><div class="chart-wrap cmpB"><canvas id="wealthChartB"></canvas></div></div>
+        <div class="sub" id="wealthNote" style="margin:10px 0 0"></div>
+      </div>
+
+      <div id="assetCards">
+      <div class="card">
+        <div class="controls">
+          <h2 style="margin:0">View</h2>
+          <select id="view"></select>
+          <button id="csv">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Income vs. cost of owning</h2>
+        <div class="sub cdesc">Rent you collect compared with what owning costs, loan payments included.</div>
+        <div class="cmp-grid"><div class="chart-wrap"><canvas id="opChart"></canvas></div><div class="chart-wrap cmpB"><canvas id="opChartB"></canvas></div></div>
+        <div class="sub" id="opNote" style="margin:10px 0 0"></div>
+        <div class="sub" id="opDrop" style="margin:10px 0 0"></div>
+      </div>
+
+      <div class="card">
+        <h2>Asset Value and Loan</h2>
+        <div class="sub cdesc">What your property is worth, how much you still owe, and the difference (your equity).</div>
+        <div class="cmp-grid"><div class="chart-wrap"><canvas id="valueChart"></canvas></div><div class="chart-wrap cmpB"><canvas id="valueChartB"></canvas></div></div>
+      </div>
+
+      <div class="card"><details><summary>Yearly table</summary><div class="sub" style="margin:8px 0 0">The cash columns cover all your assets.</div><div class="tbl" style="margin-top:10px"><table id="tbl"></table></div></details></div>
+
+      <div class="card"><details><summary>Assumptions</summary><ul class="assume" id="assumeList" style="margin-top:10px"></ul></details></div>
+      </div>
+    </div>
+  </div>
+</main>
+<div id="menu"></div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
